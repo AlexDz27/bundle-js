@@ -10,21 +10,21 @@
 using namespace std;
 
 string getFileNameWoExt(string fileName);
-string substringFileNameFromScript(string& scriptTagLine);
-string getFileMainJsFileName(string fileName);
+string substringFileNameFromScript(string scriptTagLine);
+string jsName(string fileName);
+string jsNameB(string fileName);
 
 int main() {
   // Prepare structure - create necessary folders
   CreateDirectory("build", nullptr);
   CreateDirectory("build/js", nullptr);
-  CopyFile("js/main.js", "build/js/main.js", false);
 
   string fileNames[] = {"index.html", "another.html"};
 
-  for (const string& fileName : fileNames) {
+  for (string& fileName : fileNames) {
     // Copy html files along with their main JS file inside js/ folder
     CopyFile(fileName.c_str(), ("build/" + fileName).c_str(), false);
-    CopyFile((getFileMainJsFileName(fileName)).c_str(), ("build/" + getFileMainJsFileName(fileName)).c_str(), false);
+    CopyFile((jsName(fileName)).c_str(), ("build/" + jsNameB(fileName)).c_str(), false);
     
     ifstream file("build/" + fileName);
     string fileNameWoExt = getFileNameWoExt(fileName);
@@ -48,11 +48,8 @@ int main() {
         ostringstream buffer;
         buffer << secondaryFile.rdbuf();
 
-        // HERE WORK!!!!!! cout << getFileMainJsFileName(fileName) << endl;
+        cout << jsName(fileName) << endl;
        
-        // ifstream mainFile("js/" + fileName);
-        // file << buffer;
-
         // TODO: поместить bundled в js/...-bundled.js
       }
     }
@@ -66,7 +63,7 @@ string getFileNameWoExt(string fileName) {
   return fileNameWoExt;
 }
 
-string substringFileNameFromScript(string& scriptTagLine) {
+string substringFileNameFromScript(string scriptTagLine) {
   smatch match;
   // TODO: learn way to be able to CAPTURE content WITHIN quotes; rn it's kinda ugly bc i need to trim quotes after
   regex r("\".*\"");
@@ -80,7 +77,12 @@ string substringFileNameFromScript(string& scriptTagLine) {
   return secondaryFileName;
 }
 
-string getFileMainJsFileName(string fileName) {
+string jsName(string fileName) {
   if (fileName == "index.html") return "js/main.js";
   return "js/" + getFileNameWoExt(fileName) + ".js";
+}
+// jsNameBundled
+string jsNameB(string fileName) {
+  if (fileName == "index.html") return "js/main-bundled.js";
+  return "js/" + getFileNameWoExt(fileName) + "-bundled" + ".js";
 }
