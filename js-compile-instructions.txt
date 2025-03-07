@@ -1,0 +1,21 @@
+main.js
+cl-1.js
+---
+index.html
+
+another.js
+cl-1.js
+---
+another.html
+
+
+
+
+
+...
+
+// cl-1.js
+...
+
+// cl-2.js
+...
