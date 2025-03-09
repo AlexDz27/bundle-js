@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <fstream>
 #include <windows.h>
 #include <format>
@@ -9,9 +10,7 @@
 #include <sstream>
 using namespace std;
 
-string getFileNameWoExt(string fileName);
 string substringFileNameFromScript(string scriptTagLine);
-string jsName(string fileName);
 string jsNameB(string fileName);
 
 int main() {
@@ -19,25 +18,23 @@ int main() {
   CreateDirectory("build", nullptr);
   CreateDirectory("build/js", nullptr);
 
-  string fileNames[] = {"index.html", "another.html"};
+  vector<array<string, 2>> htmlFileToMainJsFile = {
+    {"index.html", "js/main.js"},
+    {"another.html", "js/another.js"},
+  };
 
-  for (string& fileName : fileNames) {
+  for (auto [htmlFileName, mainJsFileName] : htmlFileToMainJsFile) {
     // Copy html files along with their main JS file inside js/ folder
-    CopyFile(fileName.c_str(), ("build/" + fileName).c_str(), false);
-    CopyFile((jsName(fileName)).c_str(), ("build/" + jsNameB(fileName)).c_str(), false);
+    CopyFile(htmlFileName.c_str(), ("build/" + htmlFileName).c_str(), false);
+    CopyFile(mainJsFileName.c_str(), ("build/" + mainJsFileName).c_str(), false);
     
-    ifstream file("build/" + fileName);
-    string fileNameWoExt = getFileNameWoExt(fileName);
-    string searchStr;
-    if (fileName == "index.html") {
-      searchStr = format("<script src=\"js/{}\"></script>", "main.js");
-    } else {
-      searchStr = format("<script src=\"js/{}\"></script>", fileNameWoExt + ".js");
-    }
+    // TODO: по идее fstream тут надо просто
+    ifstream htmlFile("build/" + htmlFileName);
+    string searchStr = format("<script src=\"{}\"></script>", mainJsFileName); // TODO: bad naming)
 
     // Get (TODO: process?) secondary JS files, omitting main file
     string line;
-    while (getline(file, line)) {
+    while (getline(htmlFile, line)) {
       if (line.find(searchStr) != string::npos) {
         continue;
       }
@@ -47,20 +44,13 @@ int main() {
         ifstream secondaryFile(secondaryFileName, ios::app);
         ostringstream buffer;
         buffer << secondaryFile.rdbuf();
-
-        cout << jsName(fileName) << endl;
+        
        
-        // TODO: поместить bundled в js/...-bundled.js
+        // TODO: поместить bundled в js/....js
+        // TODO: rename в ..-bundled.js
       }
     }
   }
-}
-
-string getFileNameWoExt(string fileName) {
-  size_t dotPos = fileName.find('.');
-  string fileNameWoExt = fileName.substr(0, dotPos);
-
-  return fileNameWoExt;
 }
 
 string substringFileNameFromScript(string scriptTagLine) {
@@ -77,9 +67,11 @@ string substringFileNameFromScript(string scriptTagLine) {
   return secondaryFileName;
 }
 
-string jsName(string fileName) {
-  if (fileName == "index.html") return "js/main.js";
-  return "js/" + getFileNameWoExt(fileName) + ".js";
+string getFileNameWoExt(string fileName) {
+  size_t dotPos = fileName.find('.');
+  string fileNameWoExt = fileName.substr(0, dotPos);
+
+  return fileNameWoExt;
 }
 // jsNameBundled
 string jsNameB(string fileName) {
