@@ -3,9 +3,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <array>
 #include <fstream>
 #include <windows.h>
-#include <format>
 #include <regex>
 #include <sstream>
 using namespace std;
@@ -28,24 +28,21 @@ int main() {
     CopyFile(htmlFileName.c_str(), ("build/" + htmlFileName).c_str(), false);
     CopyFile(mainJsFileName.c_str(), ("build/" + mainJsFileName).c_str(), false);
     
-    // TODO: по идее fstream тут надо просто
-    ifstream htmlFile("build/" + htmlFileName);
-    string searchStr = format("<script src=\"{}\"></script>", mainJsFileName); // TODO: bad naming)
+    fstream htmlFile("build/" + htmlFileName);
+    ofstream jsFile("build/" + mainJsFileName, ios::app);
 
     // Get (TODO: process?) secondary JS files, omitting main file
     string line;
+    int lineIdx;
     while (getline(htmlFile, line)) {
-      if (line.find(searchStr) != string::npos) {
-        continue;
-      }
-
-      if (line.find("<script") != string::npos) {
+      if (line.contains("<script") && !line.contains(mainJsFileName)) {
         string secondaryFileName = substringFileNameFromScript(line);
-        ifstream secondaryFile(secondaryFileName, ios::app);
-        ostringstream buffer;
-        buffer << secondaryFile.rdbuf();
+        ifstream secondaryFile(secondaryFileName);
         
-       
+        jsFile << "\n" << "// From " << secondaryFileName << "\n" << secondaryFile.rdbuf();
+
+
+
         // TODO: поместить bundled в js/....js
         // TODO: rename в ..-bundled.js
       }
